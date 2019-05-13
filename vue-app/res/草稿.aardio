@@ -1,34 +1,24 @@
 import console;
-import web.script;
-var str = "\u3010"
 
-		
-		
-import inet.whttp;
-var whttp = inet.whttp();
-var pageUrl = "https://study.163.com/course/introduction.htm?courseId=1005084022#/courseDetail?tab=1";
-var listUrl = "https://study.163.com/dwr/call/plaincall/PlanNewBean.getPlanCourseDetail.dwr?1556252309400";
+import process.popen;
 
-var query = /*
-&callCount=1
-&scriptSessionId=${scriptSessionId}190
-&httpSessionId=011582044dfa45828822c91f260c331b
-&c0-scriptName=PlanNewBean
-&c0-methodName=getPlanCourseDetail
-&c0-id=0
-&c0-param0=string:1004057023
-&c0-param1=number:0
-&c0-param2=null:null
-&batchId=1556252308494
-*/
-//1003967089
-query = string.replace(query,'\r\n','');
-console.log(query)
-var html, err = whttp.get(listUrl+query);
 
-html = string.replace(html,"\\","%")
-html = web.script().Run("unescape",html)
-string.save("C:\Users\tm01510\Desktop\33.txt",html)
+console.log("xxx")
+var cmdCall = function(cmd){
+    console.log(cmd)
+	var prcs = process.popen("cmd.exe");
+	prcs.write(cmd)
+	result = prcs.peekTo(">");
+	
+prcs.write('exit\n')
 
-execute("pause")
+	
+	prcs.close();
+	console.log(result)
+}
+//cmdCall("netsh interface portproxy add v4tov4 listenport=80 connectaddress=127.0.0.1 connectport=8888 listenaddress=127.0.0.1 protocol=tcp")
+//cmdCall("netsh interface portproxy /?");
 
+//cmdCall("netsh interface portproxy show all");
+cmdCall("ipconfig");
+console.pause(true);
