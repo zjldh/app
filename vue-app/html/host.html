@@ -183,7 +183,9 @@
 				json: "123",
 				count: 0,
 				
-				hostList: [],
+				hostList: [{
+					index:1,host:'1',enabled:true
+				}],
 				hostKeyword:'',
 				
 				proxyFrom:'',
@@ -238,7 +240,7 @@
 					this.count ++;
 				},
 				hostEdit(index){
-					var host = this.hostList[index-1].hostTmp.host.trim();
+					var host = this.hostList[index-1].hostTmp.trim();
 					if(this.hostValidate(host)){
 						aardioCall("hostEdit",index,host)
 					}
@@ -265,7 +267,7 @@
 					var pFrom = this.proxyFrom && this.proxyFrom.trim();
 					var pTo = this.proxyTo && this.proxyTo.trim();
 					if(this.proxyValidate(pFrom, pTo)){
-						aardioCall("proxyAdd", host)
+						aardioCall("proxyAdd", pFrom, pTo)
 						this.proxyFrom = "";
 						this.proxyTo = "";
 					}

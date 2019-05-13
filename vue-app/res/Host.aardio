@@ -12,6 +12,7 @@ import web.blink.form;
 import web.json;
 import web.script;
 
+
 var wb = web.blink.form(winform);
 wb.go("/html/host.html");
 
@@ -90,9 +91,7 @@ function saveConfig(){
  	string.save(configPath, web.json.stringify(config));
 }
 function sendConfig(){
-    //console.dump(config.hostList)
     config.hostList = dealHostStatus(config.hostList);
-    console.dump(config.hostList)
 	sendDataWithType("config",config);
 	saveConfig()
 }
@@ -100,7 +99,6 @@ function sendConfig(){
 wb.external = {};
 
 wb.external.getConfig=function(){
-    console.log("getConfig")
 	sendConfig();
 }
 
@@ -108,7 +106,6 @@ wb.external.getConfig=function(){
 wb.external.hostPathChange = function(){
   	var path = fsys.dlg.open("hosts文件|hosts|");
   	if(path){
-  		console.log(path)
   		config.hostPath = path;
   		saveConfig();
   	}
@@ -185,6 +182,7 @@ function checkProxyExist(index, from ,to){
 }
 // 添加
 wb.external.proxyAdd=function(from ,to){
+    console.log("add")
     if(checkProxyExist(-1, from,to)){
     	return;
     }
@@ -228,7 +226,6 @@ var watchDir="/html";
 var startWatch=function(){
 	winform.thrdWatcher = fsys.dirWatcher.thread(
 	function(filename,action,actionText){
-		//console.log(filename)
 		wb.go("/html/host.html");
 		
 	}, watchDir); ;
@@ -249,7 +246,6 @@ wb.external.close = function(){winform.close();};
 
 function sendData(data){
     var json =web.json.stringify(data);
-   // console.log(json)
 	wb.doScript("onDataChange("+json+")")
 }
 function sendDataWithType(t,d){
@@ -259,7 +255,6 @@ function sendDataWithType(t,d){
     sendData(data);
 }
 function sendMsg(typex, msg){
-    //console.log(msg)
 	wb.doScript(string.format("onMsg('%s','%s')", typex, msg))
 }
 //添加阴影
