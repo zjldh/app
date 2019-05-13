@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="utf-8" />
+		<title></title>
+		<link rel="stylesheet" href="./css/element.css">
+		<link rel="stylesheet" href="./css/index.css">
+		<script src="./js/vue.js"></script>
+		<script src="./js/element.js"></script>
+		<script src="./js/echarts.js"></script>
+
+		<!--	<script src="https://getfirebug.com/firebug-lite.js#overrideConsole"></script>-->
+	</head>
+
+	<body>
+
+		<div id="header">
+			<el-row>
+				<el-col :span="22">
+					<div class="title" onmousedown="external.hitCaption()">工具</div>
+				</el-col>
+				<el-col :span="2">
+					<div class="ctrl">
+						<a class="el-icon-close" onclick="external.close()"></a>
+					</div>
+				</el-col>
+
+			</el-row>
+		</div>
+		<div id="app">
+			<el-input class="mb-10" v-model="path">
+				 <template slot="append">
+				 	<el-button type="primary" @click="getList">获取</el-button>
+				 </template>
+			</el-input>
+			
+			<el-table :data="tableData" style="width: 100%" max-height="300">
+				<el-table-column type="index" :label="'序号 '+tableData.length" width="70">
+				</el-table-column>
+				<el-table-column prop="name" label="名称" width="180">
+				</el-table-column>
+				<el-table-column prop="time" label="时长" width="100">
+					 <template slot-scope="scope">
+				        <i class="el-icon-time"></i>
+				        <span>{{ showTime(scope.row.time) }}</span>
+				      </template>
+				</el-table-column>
+				<el-table-column prop="url" label="操作">
+					<template slot-scope="scope">
+					<el-button :disabled="!scope.row.time" @click="watch(scope.row,true)" type="text" size="small">查看</el-button>
+					<el-button :disabled="!scope.row.time" @click="watch(scope.row,false)" type="text" size="small">窗口</el-button>
+				  </template>
+				</el-table-column>
+			</el-table>
+		</div>
+
+	</body>
+	<script>
+		var header = new Vue({
+			el: "#header"
+		})
+		var app = new Vue({
+			el: "#app",
+			data: {
+				path:"1004461012",
+				isStart: false,
+				json: "123",
+				count: 0,
+				tableData: [
+					{name:"1",time:"2",url:"http:www.baidu.com"}
+				]
+			},
+			methods: {
+				getList: function() {
+					aardioCall("getList",app.path);
+				},
+				test: function() {
+					onMsg("success", "123")
+				},
+				watch:function(lesson, inbrowser){
+					aardioCall("watch",lesson,inbrowser);
+				},
+				showTime:function(time){
+					console.log(time)
+					time = parseInt(time);
+					console.log(3600>time)
+					var date = new Date(time*1000);
+					var reg = 3600>time ? /\d{2}:\d{2} / :/\d{2}:\d{2}:\d{2}/
+				
+					return date.toString().match(reg)[0]
+				}
+				
+			}
+		})
+		
+		var aardioCall = function(method, args) {
+			external[method](args)
+		}
+
+		function onDataChange(data) {
+			app.json = data.date
+			app.count++;
+			switch(data.type) {
+				case 'chart':
+					option.xAxis.data = data.date
+					option.series[0].data = data.price
+					chart.setOption(option, false);
+					chart.resize();
+					break;
+				case 'table':
+					app.tableData = data.data;
+					break;
+				default:
+
+			}
+
+		}
+		var msgTypeName = {
+			"success": "成功",
+			"warn": "警告",
+			"error": "错误"
+		}
+
+		function onMsg(type, msg) {
+			app.$notify({
+				title: msgTypeName[type],
+				message: msg,
+				type: type
+			});
+		}
+	</script>
+
+</html>

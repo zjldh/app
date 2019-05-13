@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<project ver="10" name="vue-app" libEmbed="true" icon="..." CompanyName="单位名称" FileDescription="vue-app" LegalCopyright="Copyright (C) 单位名称 2019" ProductName="vue-app" InternalName="vue-app" FileVersion="0.0.0.02" ProductVersion="0.0.0.02" publishDir="/Publish/" ui="win" output="vue-app.exe" dstrip="false">
+	<file name="main.aardio" path="main.aardio" comment="启动程序代码"/>
+	<folder name="资源文件" path="res" embed="true">
+		<file name="播放器.aardio" path="res\播放器.aardio" comment="res\播放器.aardio"/>
+		<file name="网易.aardio" path="res\网易.aardio" comment="res\网易.aardio"/>
+		<file name="草稿.aardio" path="res\草稿.aardio" comment="res\草稿.aardio"/>
+		<file name="Host.aardio" path="res\Host.aardio" comment="res\Host.aardio"/>
+		<file name="系统时间.aardio" path="res\系统时间.aardio" comment="res\系统时间.aardio"/>
+	</folder>
+	<folder name="HTML" path="html" comment="" embed="true">
+		<file name="main.aardio" path="html\main.aardio" comment="html\main.aardio"/>
+		<file name=".project" path="html\.project" comment="html\.project"/>
+		<file name="index.html" path="html\index.html" comment="html\index.html"/>
+		<folder name="css" path="html\css" comment="html\css">
+			<file name="element.css" path="html\css\element.css" comment="html\css\element.css"/>
+			<file name="index.css" path="html\css\index.css" comment="html\css\index.css"/>
+		</folder>
+		<folder name="img" path="html\img" comment="html\img"/>
+		<folder name="js" path="html\js" comment="html\js">
+			<file name="element.js" path="html\js\element.js" comment="html\js\element.js"/>
+			<file name="vue.js" path="html\js\vue.js" comment="html\js\vue.js"/>
+		</folder>
+	</folder>
+</project>

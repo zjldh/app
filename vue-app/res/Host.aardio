@@ -1,0 +1,155 @@
+import win.ui;
+/*DSG{{*/
+winform = win.form(text="aardio工程25";right=759;bottom=469;border="none";mode="popup")
+winform.add()
+/*}}*/
+
+import console;
+import fsys.dlg;
+import inet.whttp;
+import process;
+import web.blink.form;
+import web.json;
+import web.script;
+
+var wb = web.blink.form(winform);
+wb.go("/html/host.html");
+
+var configPath="/res/host/host";
+var config = {};
+
+function init(){
+	config = web.json.parse(string.load(configPath)) || {};
+	config.hostPath :="C:\Windows\System32\drivers\etc\hosts"; 
+	
+	sendConfig();
+}
+
+
+function saveConfig(){
+ 	string.save(configPath, web.json.stringify(config));
+}
+function sendConfig(){
+	sendDataWithType("config",config);
+}
+winform.onClose = function(hwnd,message,wParam,lParam){
+   	saveConfig();
+}
+wb.external = {};
+
+wb.external.getConfig=function(){return config}
+wb.external.hostPathChange = function(){
+  	var path = fsys.dlg.open("hosts文件|hosts|");
+  	if(path){
+  		console.log(path)
+  		config.hostPath = path;
+  		saveConfig();
+  	}
+}
+wb.external.hostPathOpen=function(){
+    process.exploreSelect(config.hostPath)
+}
+// 添加
+wb.external.hostAdd=function(host){
+	table.push(config.hostList,host)
+	return config.hostList;
+}
+wb.external.hostDelete = function(index){
+	table.remove(config.hostList,index)
+	return config.hostList;
+};
+wb.external.hostSwitch = function(index){
+	var item = config.hostList[index]
+	var host =item.host;
+	item.enabled = !item.enabled;
+	changeHosts(item.host, item.enabled)
+};
+wb.external.hostEdit = function(index, host){
+	config.hostList[index].host = host
+	return config.hostList;
+};
+
+var changeHosts=function(host, enabled){
+    var hostTmp = st
+    
+    ring.replace(host,"\s",'');
+    hostTmp = string.upper(hostTmp);
+    var lines={}
+    var exist=false;
+	for line in io.lines(config.hostPath) { 
+		var tmp = string.upper(string.replace(line,"\s",''));
+		// 存在一条 启用的
+		if(hostTmp===tmp){
+			exist = true
+			if(!enabled){
+				line = "#"+line;
+			}
+		}
+		// 存在一条 禁用的
+		if("#"+hostTmp === tmp){
+			exist = true
+			if(enabled){
+				line = string.sub(line,2,#line);
+			}
+		}
+    	table.push(lines,line)
+	} 
+	if(enabled && !exist){
+		table.push(lines,host)
+	}
+	string.save(config.hostPath, string.join(lines,'\r\n'))
+}
+
+var dealHostStatus=function(hostList){
+    var map = {};
+    for k,v in hostList{
+    	var tmp = string.upper(string.replace(v,"\s",''))
+    	table.push(map,tmp)
+    }
+	for line in io.lines(config.hostPath) { 
+		var tmp = string.upper(string.replace(line,"\s",''))
+		if(#tmp>10){
+			for i,v in hostList{
+				if(tmp === map[i]){
+					hostList[i].enabled = true;
+				}
+			}
+		}
+	}
+}
+
+
+
+/*基本{{*/
+
+wb.external.hitCaption = function(){winform.hitCaption();};
+wb.external.close = function(){winform.close();};
+   
+
+function sendData(data){
+    var json =web.json.stringify(data);
+   // console.log(json)
+	wb.doScript("onDataChange("+json+")")
+}
+function sendDataWithType(t,d){
+    var data={};
+    data.type=t;
+    data.data = d;
+    sendData(data);
+}
+function sendMsg(typex, msg){
+    //console.log(msg)
+	wb.doScript(string.format("onMsg('%s','%s')", typex, msg))
+}
+//添加阴影
+import win.ui.shadow;
+win.ui.shadow(winform);
+
+//限定最大化范围
+import win.ui.minmax;
+win.ui.minmax(winform);
+/*}}*/
+wb.wait();
+init();
+winform.show();
+win.loopMessage();

@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="utf-8" />
+		<title></title>
+		<link rel="stylesheet" href="./css/element.css">
+		<link rel="stylesheet" href="./css/index.css">
+		<script src="./js/vue.js"></script>
+		<script src="./js/element.js"></script>
+
+		<!--	<script src="https://getfirebug.com/firebug-lite.js#overrideConsole"></script>-->
+	</head>
+
+	<body>
+
+		<div id="header">
+			<el-row>
+				<el-col :span="22">
+					<div class="title" onmousedown="external.hitCaption()">工具</div>
+				</el-col>
+				<el-col :span="2">
+					<div class="ctrl">
+						<a class="el-icon-close" onclick="external.close()"></a>
+					</div>
+				</el-col>
+
+			</el-row>
+		</div>
+		<div id="app">
+			<el-button :disabled="isStart" size="mini" type="primary" @click="click">开始</el-button>
+			<el-button size="mini" @click="test">测试</el-button>
+			<el-tabs value="first">
+				<el-tab-pane label="Hosts" name="first">
+					<div class="info mb-20 fs-10"><i class="el-icon-tickets"></i> 配置hosts文件内容</div>
+					<el-input disabled class="mb-10" v-model="hostPath">
+						<template slot="prepend">
+							<div width="380px">Host文件：</div>
+						</template>
+						<template slot="append">
+							<el-button type="primary" onClick="aardioCall('hostPathChange')" icon="el-icon-edit"></el-button>
+							<el-button type="primary" onClick="aardioCall('hostPathOpen')" icon="el-icon-right"></el-button>
+						</template>
+					</el-input>
+					<el-input class="mb-10" v-model="host">
+						<template slot="prepend">配置：</template>
+						<template slot="append">
+							<el-button type="primary" @click="hostAdd">添加</el-button>
+						</template>
+					</el-input>
+					<el-table style="width: 100%" max-height="300" 
+						:data="hostList.filter(data => !hostKeyword || data.host.toLowerCase().includes(hostKeyword.toLowerCase()))">
+						<el-table-column prop="host" label="配置项" width="180">
+							
+						</el-table-column>
+
+						<el-table-column prop="enabled" label="操作">
+							<template slot="header" slot-scope="scope">
+								<el-input v-model="hostKeyword" size="mini" placeholder="输入关键字搜索" />
+							</template>
+							<template slot-scope="scope">
+								<span v-if="scope.row.edit">
+									<el-button @click="hostPreEdit(scope.$index,false)" size="mini" type="text">取消</el-button>
+									<el-button @click="hostPreEdit(scope.$index,true)" size="mini" type="text" icon="el-icon-save"></el-button>
+								</span>
+								<span v-else>
+									<el-button @click="hostPreEdit(scope.$index,true)" size="mini" type="text" icon="el-icon-edit"></el-button>
+								</span>
+								<el-button @click="open(scope.row.url)" type="text" size="small">查看</el-button>
+								<a href="#" @click="hostDelete(scope.row.index)"><i class="el-icon-delete danger"></i></a>
+
+								
+							</template>
+						</el-table-column>
+					</el-table>
+				</el-tab-pane>
+				<el-tab-pane label="Proxy" name="second">
+					<el-table :data="tableData" style="width: 100%" max-height="300">
+						<el-table-column prop="date" label="日期" width="180">
+						</el-table-column>
+						<el-table-column prop="price" label="价格" width="180">
+						</el-table-column>
+						<el-table-column prop="url" label="地址">
+							<template slot-scope="scope">
+								<el-button @click="open(scope.row.url)" type="text" size="small">查看</el-button>
+							</template>
+						</el-table-column>
+					</el-table>
+				</el-tab-pane>
+			</el-tabs>
+
+			{{count}} : {{json}}
+		</div>
+
+	</body>
+	<script>
+		var header = new Vue({
+			el: "#header"
+		})
+		var REG_HOST = /^(\d{1,3}\.){3}\d{1,3}\s+[\w\.\-]{4,}$/
+		var app = new Vue({
+			el: "#app",
+			data: {
+				hostPath: "",
+				host: "",
+				isStart: false,
+				json: "123",
+				count: 0,
+				tableData: [{
+					date: "1",
+					price: "2",
+					url: "http:www.baidu.com"
+				}],
+				hostList: [{
+					host: "127.0.0.1 aaa.com",
+					enabled: true
+				}],
+				hostKeyword:''
+			},
+			methods: {
+				click: function() {
+					this.isStart = !this.isStart;
+					aardioCall("start");
+				},
+				test: function() {
+					onMsg("success", "123")
+				},
+				getConfig: function() {
+					aardioCall("getConfig")
+				},
+				hostAdd() {
+					var host = this.host && this.host.trim();
+					if (host && REG_HOST.test(host)) {
+						var a = aardioCall("hostAdd", host)
+						alert(a);
+					} else {
+						onMsg("warn", "配置不合法，（ip  域名）")
+					}
+				},
+				hostDelete() {
+					onMsg("success", "123")
+				},
+				hostPreEdit(index,isEdit) {
+					this.hostList[index].edit = isEdit
+				},
+				hostSwitch(index) {
+					onMsg("success", "123")
+				},
+				
+				open: function(url) {
+					//alert(url)
+					aardioCall("open", url)
+				},
+
+
+			}
+		})
+
+		var aardioCall = function(method, args) {
+			return external[method](args)
+		}
+
+		function onDataChange(rlt) {
+			onMsg('success')
+			app.json = JSON.stringify(rlt)
+			app.count++;
+
+			switch (rlt.type) {
+				case 'config':
+					onMsg('success', rlt.data)
+					updateConfig(rlt, data);
+				case 'table':
+					app.tableData = rlt.data;
+					break;
+				default:
+
+			}
+
+		}
+
+		function updateConfig(config) {
+			for (let k in config) {
+				app[k] = config[k]
+			}
+		}
+		var msgTypeName = {
+			"success": "成功",
+			"warn": "警告",
+			"error": "错误"
+		}
+
+		function onMsg(type, msg) {
+			app.$notify({
+				title: msgTypeName[type],
+				message: msg,
+				type: type
+			});
+		}
+	</script>
+
+</html>

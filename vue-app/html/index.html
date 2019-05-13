@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="utf-8" />
+		<title></title>
+		<link rel="stylesheet" href="./css/element.css">
+		<link rel="stylesheet" href="./css/index.css">
+		<script src="./js/vue.js"></script>
+		<script src="./js/element.js"></script>
+		<script src="./js/echarts.js"></script>
+
+		<!--	<script src="https://getfirebug.com/firebug-lite.js#overrideConsole"></script>-->
+	</head>
+
+	<body>
+
+		<div id="header">
+			<el-row>
+				<el-col :span="22">
+					<div class="title" onmousedown="external.hitCaption()">工具</div>
+				</el-col>
+				<el-col :span="2">
+					<div class="ctrl">
+						<a class="el-icon-close" onclick="external.close()"></a>
+					</div>
+				</el-col>
+
+			</el-row>
+		</div>
+		<div id="app">
+			<el-button :disabled="isStart" size="mini" type="primary" @click="click">开始</el-button>
+			<el-button size="mini" @click="test">测试</el-button>
+			<el-tabs value="first">
+				<el-tab-pane label="图" name="first">
+					<div id="chart1"></div>
+				</el-tab-pane>
+				<el-tab-pane label="表格" name="second">
+					<el-table :data="tableData" style="width: 100%" max-height="300">
+						<el-table-column prop="date" label="日期" width="180">
+						</el-table-column>
+						<el-table-column prop="price" label="价格" width="180">
+						</el-table-column>
+						<el-table-column prop="url" label="地址">
+							<template slot-scope="scope">
+							<el-button @click="open(scope.row.url)" type="text" size="small">查看</el-button>
+						  </template>
+						</el-table-column>
+					</el-table>
+				</el-tab-pane>
+			</el-tabs>
+
+			{{count}} : {{json}}
+		</div>
+
+	</body>
+	<script>
+		var header = new Vue({
+			el: "#header"
+		})
+		var app = new Vue({
+			el: "#app",
+			data: {
+				isStart: false,
+				json: "123",
+				count: 0,
+				tableData: [
+					{date:"1",price:"2",url:"http:www.baidu.com"}
+				]
+			},
+			methods: {
+				click: function() {
+					this.isStart = !this.isStart;
+					aardioCall("start");
+				},
+				test: function() {
+					onMsg("success", "123")
+				},
+				open:function(url){
+					//alert(url)
+					aardioCall("open",url)
+				}
+				
+			}
+		})
+		var el_chart = document.getElementById("chart1");
+		var chart = echarts.init(el_chart);
+		option = {
+			tooltip: {
+				trigger: 'axis',
+				axisPointer: {
+					type: 'cross',
+					label: {
+						backgroundColor: '#283b56'
+					}
+				}
+			},
+			xAxis: {
+				type: 'category',
+				data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+			},
+			yAxis: {
+				type: 'value'
+			},
+			series: [{
+				data: [820, 932, 901, 934, 1290, 1330, 1320],
+				type: 'line'
+			}]
+		};
+		if(option && typeof option === "object") {
+			chart.setOption(option, false);
+		}
+		var aardioCall = function(method, args) {
+			external[method](args)
+		}
+
+		function onDataChange(data) {
+			app.json = data.date
+			app.count++;
+			switch(data.type) {
+				case 'chart':
+					option.xAxis.data = data.date
+					option.series[0].data = data.price
+					chart.setOption(option, false);
+					chart.resize();
+					break;
+				case 'table':
+					app.tableData = data.data;
+					break;
+				default:
+
+			}
+
+		}
+		var msgTypeName = {
+			"success": "成功",
+			"warn": "警告",
+			"error": "错误"
+		}
+
+		function onMsg(type, msg) {
+			app.$notify({
+				title: msgTypeName[type],
+				message: msg,
+				type: type
+			});
+		}
+	</script>
+
+</html>
