@@ -1,124 +1,206 @@
 import win.ui;
 /*DSG{{*/
-mainForm = win.form(text="aardio工程25";right=759;bottom=469;border="none";mode="popup")
-mainForm.add()
+winform = win.form(text="aardio工程25";right=759;bottom=469;border="none";mode="popup")
+winform.add()
 /*}}*/
 
 import console;
-import web.json;
+import fsys.dlg;
+import inet.whttp;
 import process;
 import web.blink.form;
-var wb = web.blink.form(mainForm);
-wb.go("/html/index.html");
+import web.json;
+import web.script;
 
-wb.external = {
-    hitCaption = function(){
-        mainForm.hitCaption();
-    };
-    hitmax = function(){
-    	return mainForm.hitmax()
-    };
-    hitmin = function(){
-    	mainForm.hitmin()
-    };
-    close = function(){
-        mainForm.close();
-    };
-    start = function(){
-        mainForm.setTimeout(start,100);
-    }
-    open = function(url){
-        process.execute(url);
-    }
+var wb = web.blink.form(winform);
+wb.go("/html/host.html");
+
+var configPath="/res/host/host";
+var config = {};
+
+function init(){
+	config = web.json.parse(string.load(configPath)) || {};
+	config.hostPath :="C:\Windows\System32\drivers\etc\hosts"; 
+	config.hostList :={{host="127.0.0.1 www.baidu.com"}}
+	sendConfig();
 }
 
-import my;
 
-var spider = my.Spider(
- 	"http://www.qinbing.cn",
-    "http://www.qinbing.cn/Portal/Index/news/type/357",
-    '<h1><a target="_blank" href="(.*?)">(.*?)(浙江|全国)',
-    '<a class=\"l left\" href=\"(.*?)\"> 下一页 </a>',
-    '>浙江-建德.*?参考价&nbsp;</td><td.*?>(.*?)&nbsp;</td'+'|'+'<p>浙江-建德.*?参考价 <span style="white-space:pre"></span>(.*?) <span',
-   5
-)
+function saveConfig(){
+ 	string.save(configPath, web.json.stringify(config));
+}
+function sendConfig(){
+    console.dump(config.hostList)
+	sendDataWithType("config",config);
+}
 
-function start(){
-	 var data = {data={}};
-	data.type="table";
-	var chartData = {date={}; price={}}
-	chartData.type="chart"
-	
-	spider.start(function(item){
-    	var itemUrl = item[1];
-    	var date = item[2];
-    	var x = item[3]
-		itemUrl, item  = spider.dealItem(itemUrl);
-		
-		var price = 0;
-		if(#item> 0){
-			price = #item[1] ==1 ? item[1][1] : item[1][2]
+/*HOSTS{{*/
+
+var changeHosts=function(host, enabled){
+    console.log(host, enabled)
+    var hostTmp = string.replace(host,"\s",'');
+    hostTmp = string.upper(hostTmp);
+    var lines={}
+    var exist=false;
+	for line in io.lines(config.hostPath) { 
+		console.log(line)
+		var tmp = string.upper(string.replace(line,"\s",''));
+		// 存在一条 启用的
+		if(hostTmp===tmp){
+			exist = true
+			if(!enabled){
+				line = "#"+line;
+			}
 		}
-		
-		//console.log(price)
-		table.push(data.data,{date=date;url=itemUrl;price=price})	
-		sendData(data);
-		
-		table.insert(chartData.date,date,1);
-        table.insert(chartData.price,price,1);
-		sendData(chartData);
-		
-		win.delay(100)
-	})
+		// 存在一条 禁用的
+		if("#"+hostTmp === tmp){
+			exist = true
+			if(enabled){
+				line = string.sub(line,2,#line);
+			}
+		}
+    	table.push(lines,line)
+	} 
+	if(enabled && !exist){
+		console.log("xx")
+		table.push(lines,host)
+	}
+	string.save(config.hostPath, string.join(lines,'\r\n'))
+}
+
+var dealHostStatus=function(hostList){
+    var map = {};
+    for k,v in hostList{
+    	var tmp = string.upper(string.replace(v,"\s",''))
+    	table.push(map,tmp)
+    }
+	for line in io.lines(config.hostPath) { 
+		var tmp = string.upper(string.replace(line,"\s",''))
+		if(#tmp>10){
+			for i,v in hostList{
+				if(tmp === map[i]){
+					hostList[i].enabled = true;
+				}
+			}
+		}
+	}
 }
 
 
 
+/*}}*/
 
-function sendData(data){
-    var json =web.json.stringify(data);
-   // console.log(json)
-	wb.doScript("onDataChange("+json+")")
-}
-function sendMsg(typex, msg){
-    //console.log(msg)
-	wb.doScript(string.format("onMsg('%s','%s')", typex, msg))
-}
+wb.external = {};
 
+wb.external.getConfig=function(){
+    console.log("getConfig")
+	sendConfig();
+}
+wb.external.hostPathChange = function(){
+  	var path = fsys.dlg.open("hosts文件|hosts|");
+  	if(path){
+  		console.log(path)
+  		config.hostPath = path;
+  		saveConfig();
+  	}
+}
+wb.external.hostPathOpen=function(){
+    process.exploreSelect(config.hostPath)
+}
+// 添加
+wb.external.hostAdd=function(host){
+    var hostTmp = string.replace(host,"\s",'');
+    hostTmp = string.upper(hostTmp);
+  	for k,v in config.hostList{
+  		var tmp = string.upper(string.replace(v.host,"\s",''))
+  		if(tmp == hostTmp){
+  			console.log("xx")
+  			sendMsg("error",host+"已存在");
+  			return;
+  		};
+  	}
+	table.push(config.hostList,{host=host})
+  	sendMsg("success",host+"添加成功");
+	sendConfig();
+}
+wb.external.hostDelete = function(index){
+    console.log("delete",index)
+	table.remove(config.hostList,index)
+	 console.log("len",#config.hostList)
+	console.dump(config.hostList)
+	sendMsg("success","删除成功");
+	sendConfig();
+};
+wb.external.hostSwitch = function(index){
+    console.log('hostSwitch')
+	var item = config.hostList[index]
+	var host =item.host;
+	item.enabled = !item.enabled;
+	changeHosts(item.host, item.enabled)
+};
+wb.external.hostEdit = function(index, host){
+	config.hostList[index].host = host
+	sendConfig();
+};
 
 
 /*文件监视{{*/
 import fsys.dirWatcher;
 var watchDir="/html";
 var startWatch=function(){
-	mainForm.thrdWatcher = fsys.dirWatcher.thread(
+	winform.thrdWatcher = fsys.dirWatcher.thread(
 	function(filename,action,actionText){
 		//console.log(filename)
-		wb.go("/html/index.html");
+		wb.go("/html/host.html");
 		
 	}, watchDir); ;
 }
 
 var stopWatch=function(){
-	if(!mainForm.thrdWatcher) return; 
-    mainForm.thrdWatcher.close(); //停止监视文件
-    logger.info("文件监控","停止监控");
+	if(!winform.thrdWatcher) return; 
+    winform.thrdWatcher.close(); //停止监视文件
 }
 
 /*}}*/
 
-startWatch();
-mainForm.onClose = function(hwnd,message,wParam,lParam){
-    mainForm.thrdWatcher.close(); //停止监视文件
-}
+/*基本{{*/
 
+wb.external.hitCaption = function(){winform.hitCaption();};
+wb.external.close = function(){winform.close();};
+   
+
+function sendData(data){
+    var json =web.json.stringify(data);
+   // console.log(json)
+	wb.doScript("onDataChange("+json+")")
+}
+function sendDataWithType(t,d){
+    var data={};
+    data.type=t;
+    data.data = d;
+    sendData(data);
+}
+function sendMsg(typex, msg){
+    //console.log(msg)
+	wb.doScript(string.format("onMsg('%s','%s')", typex, msg))
+}
 //添加阴影
 import win.ui.shadow;
-win.ui.shadow(mainForm);
+win.ui.shadow(winform);
 
 //限定最大化范围
 import win.ui.minmax;
-win.ui.minmax(mainForm);
+win.ui.minmax(winform);
+/*}}*/
+startWatch();
+winform.onClose = function(hwnd,message,wParam,lParam){
+   	saveConfig();
+   	stopWatch();
+}
 
-mainForm.show();
+wb.wait();
+init();
+winform.show();
+
+//win.setTopmost(winform.hwnd,true)
 win.loopMessage();

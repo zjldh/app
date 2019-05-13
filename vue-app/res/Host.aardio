@@ -21,7 +21,7 @@ var config = {};
 function init(){
 	config = web.json.parse(string.load(configPath)) || {};
 	config.hostPath :="C:\Windows\System32\drivers\etc\hosts"; 
-	
+	config.hostList :={{host="127.0.0.1 www.baidu.com"}}
 	sendConfig();
 }
 
@@ -30,53 +30,20 @@ function saveConfig(){
  	string.save(configPath, web.json.stringify(config));
 }
 function sendConfig(){
+    console.dump(config.hostList)
 	sendDataWithType("config",config);
 }
-winform.onClose = function(hwnd,message,wParam,lParam){
-   	saveConfig();
-}
-wb.external = {};
 
-wb.external.getConfig=function(){return config}
-wb.external.hostPathChange = function(){
-  	var path = fsys.dlg.open("hosts文件|hosts|");
-  	if(path){
-  		console.log(path)
-  		config.hostPath = path;
-  		saveConfig();
-  	}
-}
-wb.external.hostPathOpen=function(){
-    process.exploreSelect(config.hostPath)
-}
-// 添加
-wb.external.hostAdd=function(host){
-	table.push(config.hostList,host)
-	return config.hostList;
-}
-wb.external.hostDelete = function(index){
-	table.remove(config.hostList,index)
-	return config.hostList;
-};
-wb.external.hostSwitch = function(index){
-	var item = config.hostList[index]
-	var host =item.host;
-	item.enabled = !item.enabled;
-	changeHosts(item.host, item.enabled)
-};
-wb.external.hostEdit = function(index, host){
-	config.hostList[index].host = host
-	return config.hostList;
-};
+/*HOSTS{{*/
 
 var changeHosts=function(host, enabled){
-    var hostTmp = st
-    
-    ring.replace(host,"\s",'');
+    console.log(host, enabled)
+    var hostTmp = string.replace(host,"\s",'');
     hostTmp = string.upper(hostTmp);
     var lines={}
     var exist=false;
 	for line in io.lines(config.hostPath) { 
+		console.log(line)
 		var tmp = string.upper(string.replace(line,"\s",''));
 		// 存在一条 启用的
 		if(hostTmp===tmp){
@@ -95,6 +62,7 @@ var changeHosts=function(host, enabled){
     	table.push(lines,line)
 	} 
 	if(enabled && !exist){
+		console.log("xx")
 		table.push(lines,host)
 	}
 	string.save(config.hostPath, string.join(lines,'\r\n'))
@@ -119,6 +87,81 @@ var dealHostStatus=function(hostList){
 }
 
 
+
+/*}}*/
+
+wb.external = {};
+
+wb.external.getConfig=function(){
+    console.log("getConfig")
+	sendConfig();
+}
+wb.external.hostPathChange = function(){
+  	var path = fsys.dlg.open("hosts文件|hosts|");
+  	if(path){
+  		console.log(path)
+  		config.hostPath = path;
+  		saveConfig();
+  	}
+}
+wb.external.hostPathOpen=function(){
+    process.exploreSelect(config.hostPath)
+}
+// 添加
+wb.external.hostAdd=function(host){
+    var hostTmp = string.replace(host,"\s",'');
+    hostTmp = string.upper(hostTmp);
+  	for k,v in config.hostList{
+  		var tmp = string.upper(string.replace(v.host,"\s",''))
+  		if(tmp == hostTmp){
+  			console.log("xx")
+  			sendMsg("error",host+"已存在");
+  			return;
+  		};
+  	}
+	table.push(config.hostList,{host=host})
+  	sendMsg("success",host+"添加成功");
+	sendConfig();
+}
+wb.external.hostDelete = function(index){
+    console.log("delete",index)
+	table.remove(config.hostList,index)
+	 console.log("len",#config.hostList)
+	console.dump(config.hostList)
+	sendMsg("success","删除成功");
+	sendConfig();
+};
+wb.external.hostSwitch = function(index){
+    console.log('hostSwitch')
+	var item = config.hostList[index]
+	var host =item.host;
+	item.enabled = !item.enabled;
+	changeHosts(item.host, item.enabled)
+};
+wb.external.hostEdit = function(index, host){
+	config.hostList[index].host = host
+	sendConfig();
+};
+
+
+/*文件监视{{*/
+import fsys.dirWatcher;
+var watchDir="/html";
+var startWatch=function(){
+	winform.thrdWatcher = fsys.dirWatcher.thread(
+	function(filename,action,actionText){
+		//console.log(filename)
+		wb.go("/html/host.html");
+		
+	}, watchDir); ;
+}
+
+var stopWatch=function(){
+	if(!winform.thrdWatcher) return; 
+    winform.thrdWatcher.close(); //停止监视文件
+}
+
+/*}}*/
 
 /*基本{{*/
 
@@ -149,7 +192,15 @@ win.ui.shadow(winform);
 import win.ui.minmax;
 win.ui.minmax(winform);
 /*}}*/
+startWatch();
+winform.onClose = function(hwnd,message,wParam,lParam){
+   	saveConfig();
+   	stopWatch();
+}
+
 wb.wait();
 init();
 winform.show();
+
+//win.setTopmost(winform.hwnd,true)
 win.loopMessage();

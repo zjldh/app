@@ -1,1 +1,1 @@
-{"hostFile":"C:\\Windows\\System32\\drivers\\etc\\host","hostPath":"C:\\Windows\\System32\\drivers\\etc\\hosts"}
+{"hostList":[{"host":"127.0.0.1 www.baidu.com"},{"enabled":true,"host":"127.0.0.1 cccc"},{"host":"127.0.0.1 bbbb"},{"host":"127.0.0.1 dddd"},null,null,null,null],"hostPath":"C:\\Windows\\System32\\drivers\\etc\\hosts"}

@@ -60,5 +60,16 @@ body{
 
 .fs-10{font-size: 10px;}
 .fs-12{font-size: 12px;}
+.fs-14{font-size: 14px;}
+.fs-16{font-size: 16px;}
 .fs-18{font-size: 18px;}
+
+  .el-table .success-row {
+    background: #f0f9eb;
+  }
+  
+  .row-btn{
+	  font-size: 18px;
+	  margin-right: 20px;
+  }
 

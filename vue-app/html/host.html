@@ -28,8 +28,8 @@
 			</el-row>
 		</div>
 		<div id="app">
-			<el-button :disabled="isStart" size="mini" type="primary" @click="click">开始</el-button>
-			<el-button size="mini" @click="test">测试</el-button>
+			<el-button :disabled="isStart" size="mini" type="primary" @click="getConfig">开始</el-button>
+			<el-button size="mini" @click="getConfig">测试</el-button>
 			<el-tabs value="first">
 				<el-tab-pane label="Hosts" name="first">
 					<div class="info mb-20 fs-10"><i class="el-icon-tickets"></i> 配置hosts文件内容</div>
@@ -39,7 +39,7 @@
 						</template>
 						<template slot="append">
 							<el-button type="primary" onClick="aardioCall('hostPathChange')" icon="el-icon-edit"></el-button>
-							<el-button type="primary" onClick="aardioCall('hostPathOpen')" icon="el-icon-right"></el-button>
+							<el-button type="primary" onClick="aardioCall('hostPathOpen')" icon="el-icon-folder-opened"></el-button>
 						</template>
 					</el-input>
 					<el-input class="mb-10" v-model="host">
@@ -48,10 +48,16 @@
 							<el-button type="primary" @click="hostAdd">添加</el-button>
 						</template>
 					</el-input>
-					<el-table style="width: 100%" max-height="300" 
+					<el-table style="width: 100%" height="200px" 
 						:data="hostList.filter(data => !hostKeyword || data.host.toLowerCase().includes(hostKeyword.toLowerCase()))">
-						<el-table-column prop="host" label="配置项" width="180">
-							
+						<el-table-column prop="$index" label="序号" width="60">
+							<template slot="header" slot-scope="scope">
+								序号<br/>
+								<b class="danger">{{hostList.length}}</b>
+							</template>
+							<template slot-scope="scope">{{scope.$index+1}}</template>
+						</el-table-column>
+						<el-table-column prop="host" label="配置项" width="480">
 						</el-table-column>
 
 						<el-table-column prop="enabled" label="操作">
@@ -60,36 +66,52 @@
 							</template>
 							<template slot-scope="scope">
 								<span v-if="scope.row.edit">
-									<el-button @click="hostPreEdit(scope.$index,false)" size="mini" type="text">取消</el-button>
-									<el-button @click="hostPreEdit(scope.$index,true)" size="mini" type="text" icon="el-icon-save"></el-button>
+									<el-button @click="hostPreEdit(scope.row.index,false)" size="mini" type="text">取消</el-button>
+									<el-button @click="hostPreEdit(scope.row.index,true)" size="mini" type="text" icon="el-icon-save"></el-button>
 								</span>
 								<span v-else>
-									<el-button @click="hostPreEdit(scope.$index,true)" size="mini" type="text" icon="el-icon-edit"></el-button>
+									<el-button @click="hostPreEdit(scope.row.index,true)" size="mini" type="text">编辑</el-button>
+									<el-button @click="hostDelete(scope.row.index)" size="mini" type="text">删除</el-button>
+									<el-button @click="hostSwitch(scope.row.index)" size="mini" type="text">{{scope.row.enabled ? '停用' : '启用'}}</el-button>
 								</span>
-								<el-button @click="open(scope.row.url)" type="text" size="small">查看</el-button>
-								<a href="#" @click="hostDelete(scope.row.index)"><i class="el-icon-delete danger"></i></a>
-
+							
+							
 								
 							</template>
 						</el-table-column>
 					</el-table>
 				</el-tab-pane>
 				<el-tab-pane label="Proxy" name="second">
-					<el-table :data="tableData" style="width: 100%" max-height="300">
-						<el-table-column prop="date" label="日期" width="180">
+					<div class="info mb-20 fs-10"><i class="el-icon-tickets"></i> 配置监听端口</div>
+					<el-table :data="proxyList" style="width: 100%" max-height="300">
+						<el-table-column prop="$index" label="序号" width="60">
+							<template slot-scope="scope">{{scope.$index+1}}</template>
 						</el-table-column>
-						<el-table-column prop="price" label="价格" width="180">
+						<el-table-column prop="from" label="From" width="180">
 						</el-table-column>
-						<el-table-column prop="url" label="地址">
+						<el-table-column prop="to" label="To" width="180">
+						</el-table-column>
+						<el-table-column prop="url" label="操作">
 							<template slot-scope="scope">
-								<el-button @click="open(scope.row.url)" type="text" size="small">查看</el-button>
+								123{{scope.$index+1}}
+								<span v-if="scope.row.edit">
+									<el-button @click="hostPreEdit(scope.row.index,false)" size="mini" type="text">取消</el-button>
+									<el-button @click="hostPreEdit(scope.row.index,true)" size="mini" type="text" icon="el-icon-save"></el-button>
+								</span>
+								<span v-else>
+									<el-button @click="hostPreEdit(scope.row.index,true)" size="mini" type="text">编辑</el-button>
+									<el-button @click="hostDelete(scope.row.index)" size="mini" type="text">删除 {{scope.$index}}</el-button>
+									<el-button @click="hostSwitch(scope.row.index)" size="mini" type="text">{{scope.row.enabled ? '停用' : '启用'}}</el-button>
+								</span>
 							</template>
 						</el-table-column>
 					</el-table>
 				</el-tab-pane>
 			</el-tabs>
 
-			{{count}} : {{json}}
+			<div style="max-height: 40px;">
+				{{count}} : {{json}}
+			</div>
 		</div>
 
 	</body>
@@ -106,15 +128,27 @@
 				isStart: false,
 				json: "123",
 				count: 0,
-				tableData: [{
-					date: "1",
-					price: "2",
-					url: "http:www.baidu.com"
+				proxyList: [{
+					
 				}],
 				hostList: [{
 					host: "127.0.0.1 aaa.com",
 					enabled: true
-				}],
+				},{host: "127.0.0.1 aaa.com",enabled: true},
+				{host: "127.0.0.1 aaa.com",enabled: true},
+				{host: "127.0.0.1 aaa.com",enabled: true},
+				{host: "127.0.0.1 aaa.com",enabled: true},
+				{host: "127.0.0.1 aaa.com",enabled: true},
+				{host: "127.0.0.1 aaa.com",enabled: true},
+				{host: "127.0.0.1 aaa.com",enabled: true},
+				{host: "127.0.0.1 aaa.com",enabled: true},
+				{host: "127.0.0.1 aaa.com",enabled: true},
+				{host: "127.0.0.1 aaa.com",enabled: true},
+				{host: "127.0.0.1 aaa.com",enabled: true},
+				{host: "127.0.0.1 aaa.com",enabled: true},
+				{host: "127.0.0.1 aaa.com",enabled: true},
+				{host: "127.0.0.1 aaa.com",enabled: true}
+				],
 				hostKeyword:''
 			},
 			methods: {
@@ -128,28 +162,28 @@
 				getConfig: function() {
 					aardioCall("getConfig")
 				},
+				tableRowClassName(scope){
+					console.log("xx")
+					return scope.row.enabled ? 'success-row' :'';
+				},
 				hostAdd() {
 					var host = this.host && this.host.trim();
 					if (host && REG_HOST.test(host)) {
-						var a = aardioCall("hostAdd", host)
-						alert(a);
+						aardioCall("hostAdd", host)
+						//onMsg("success","添加成功");
+						this.host = "";
 					} else {
 						onMsg("warn", "配置不合法，（ip  域名）")
 					}
 				},
-				hostDelete() {
-					onMsg("success", "123")
+				hostDelete(index) {
+					aardioCall("hostDelete",index);
 				},
 				hostPreEdit(index,isEdit) {
-					this.hostList[index].edit = isEdit
+					this.hostList[index-1].edit = isEdit
 				},
 				hostSwitch(index) {
-					onMsg("success", "123")
-				},
-				
-				open: function(url) {
-					//alert(url)
-					aardioCall("open", url)
+					aardioCall("hostSwitch",index);
 				},
 
 
@@ -161,14 +195,27 @@
 		}
 
 		function onDataChange(rlt) {
-			onMsg('success')
-			app.json = JSON.stringify(rlt)
+			var data = rlt.data;
+			app.json = JSON.stringify(rlt.data)
 			app.count++;
-
+			app.hostPath = data.hostPath;
+			var hostList = []
+			alert(data.hostList.length)
+			for(var i=0,len=data.hostList.length; i<len;i++){
+				var item = data.hostList[i]
+				if(data.hostList[i]){
+					item.index=i+1;
+					hostList.push(item)
+				}
+				
+			}
+			app.hostList = hostList;
+			return;
 			switch (rlt.type) {
 				case 'config':
 					onMsg('success', rlt.data)
-					updateConfig(rlt, data);
+					updateConfig(rlt.data);
+					//onMsg("warn",app.hostPath)
 				case 'table':
 					app.tableData = rlt.data;
 					break;
@@ -179,7 +226,8 @@
 		}
 
 		function updateConfig(config) {
-			for (let k in config) {
+			for (var k in config) {
+				alert(k);
 				app[k] = config[k]
 			}
 		}
