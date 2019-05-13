@@ -39,7 +39,7 @@ body{
 }
 
 #app td, #app th{
-	padding: 0 5px 0 0;
+	padding: 3px 5px 3px 0;
 }
 
 .el-input-group__prepend{
@@ -48,6 +48,10 @@ body{
 	padding-right: 0;
 	font-weight: bold;
 }
+
+.p-10{padding: 10px;}
+
+
 
 .mb-10{margin-bottom: 10px;}
 .mb-20{margin-bottom: 20px;}

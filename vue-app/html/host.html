@@ -28,9 +28,8 @@
 			</el-row>
 		</div>
 		<div id="app">
-			<el-button :disabled="isStart" size="mini" type="primary" @click="getConfig">开始</el-button>
-			<el-button size="mini" @click="getConfig">测试</el-button>
-			<el-tabs value="first">
+		
+			<el-tabs value="second">
 				<el-tab-pane label="Hosts" name="first">
 					<div class="info mb-20 fs-10"><i class="el-icon-tickets"></i> 配置hosts文件内容</div>
 					<el-input disabled class="mb-10" v-model="hostPath">
@@ -48,7 +47,11 @@
 							<el-button type="primary" @click="hostAdd">添加</el-button>
 						</template>
 					</el-input>
-					<el-table style="width: 100%" height="200px" 
+					
+					
+					<!-- HOST TABLE -->
+					
+					<el-table style="width: 100%" height="240px" :row-class-name="tableRowClassName"
 						:data="hostList.filter(data => !hostKeyword || data.host.toLowerCase().includes(hostKeyword.toLowerCase()))">
 						<el-table-column prop="$index" label="序号" width="60">
 							<template slot="header" slot-scope="scope">
@@ -57,7 +60,18 @@
 							</template>
 							<template slot-scope="scope">{{scope.$index+1}}</template>
 						</el-table-column>
-						<el-table-column prop="host" label="配置项" width="480">
+						<el-table-column prop="host" label="配置项" width="450">
+							<template slot="header" slot-scope="scope">
+								配置项 <el-button icon="el-icon-refresh" type="text" @click="getConfig"></el-button>
+							</template>
+							<template slot-scope="scope">
+								<span v-if="scope.row.edit" class="p-10">
+									<el-input size="mini" v-model="scope.row.hostTmp"></el-input>
+								</span>
+								<span v-else>
+									{{scope.row.host}}
+								</span>
+							</template>
 						</el-table-column>
 
 						<el-table-column prop="enabled" label="操作">
@@ -67,41 +81,81 @@
 							<template slot-scope="scope">
 								<span v-if="scope.row.edit">
 									<el-button @click="hostPreEdit(scope.row.index,false)" size="mini" type="text">取消</el-button>
-									<el-button @click="hostPreEdit(scope.row.index,true)" size="mini" type="text" icon="el-icon-save"></el-button>
+									<el-button @click="hostEdit(scope.row.index)" size="mini" type="text">保存</el-button>
 								</span>
 								<span v-else>
 									<el-button @click="hostPreEdit(scope.row.index,true)" size="mini" type="text">编辑</el-button>
 									<el-button @click="hostDelete(scope.row.index)" size="mini" type="text">删除</el-button>
 									<el-button @click="hostSwitch(scope.row.index)" size="mini" type="text">{{scope.row.enabled ? '停用' : '启用'}}</el-button>
 								</span>
-							
-							
-								
 							</template>
 						</el-table-column>
 					</el-table>
 				</el-tab-pane>
+				
+				<!-- TAB - PROXY -->
+				
 				<el-tab-pane label="Proxy" name="second">
 					<div class="info mb-20 fs-10"><i class="el-icon-tickets"></i> 配置监听端口</div>
-					<el-table :data="proxyList" style="width: 100%" max-height="300">
+					<el-row :gutter="20">
+						<el-col :span="10">
+							<el-input class="mb-10" v-model="proxyFrom" placeholder="ip:port">
+								<template slot="prepend">From：</template>
+							</el-input>
+						</el-col>
+						<el-col :span="10">
+							<el-input class="mb-10" v-model="proxyTo" placeholder="ip:port">
+								<template slot="prepend">To：</template>
+							</el-input>
+						</el-col>
+						<el-col :span="4">
+							<el-button type="primary" @click="proxyAdd" >添加</el-button>
+						</el-col>
+					</el-row>
+					
+					<el-table style="width: 100%" height="240px" :row-class-name="tableRowClassName"
+						:data="proxyList.filter(data => !proxyKeyword || data.from.toLowerCase().includes(proxyKeyword.toLowerCase()) || data.to.toLowerCase().includes(proxyKeyword.toLowerCase()))">
+					
 						<el-table-column prop="$index" label="序号" width="60">
+							<template slot="header" slot-scope="scope">
+								序号<br/> 
+								<b class="danger">{{proxyList.length}}</b>
+							</template>
 							<template slot-scope="scope">{{scope.$index+1}}</template>
 						</el-table-column>
 						<el-table-column prop="from" label="From" width="180">
-						</el-table-column>
-						<el-table-column prop="to" label="To" width="180">
-						</el-table-column>
-						<el-table-column prop="url" label="操作">
 							<template slot-scope="scope">
-								123{{scope.$index+1}}
-								<span v-if="scope.row.edit">
-									<el-button @click="hostPreEdit(scope.row.index,false)" size="mini" type="text">取消</el-button>
-									<el-button @click="hostPreEdit(scope.row.index,true)" size="mini" type="text" icon="el-icon-save"></el-button>
+								<span v-if="scope.row.edit" class="p-10">
+									<el-input size="mini" v-model="scope.row.fromTmp"></el-input>
 								</span>
 								<span v-else>
-									<el-button @click="hostPreEdit(scope.row.index,true)" size="mini" type="text">编辑</el-button>
-									<el-button @click="hostDelete(scope.row.index)" size="mini" type="text">删除 {{scope.$index}}</el-button>
-									<el-button @click="hostSwitch(scope.row.index)" size="mini" type="text">{{scope.row.enabled ? '停用' : '启用'}}</el-button>
+									{{scope.row.from}}
+								</span>
+							</template>
+						</el-table-column>
+						<el-table-column prop="to" label="To" width="180">
+							<template slot-scope="scope">
+								<span v-if="scope.row.edit" class="p-10">
+									<el-input size="mini" v-model="scope.row.toTmp"></el-input>
+								</span>
+								<span v-else>
+									{{scope.row.to}}
+								</span>
+							</template>
+						</el-table-column>
+						<el-table-column prop="enabled" label="操作">
+							<template slot="header" slot-scope="scope">
+								<el-input v-model="proxyKeyword" size="mini" placeholder="输入关键字搜索" />
+							</template>
+							<template slot-scope="scope">
+								<span v-if="scope.row.edit">
+									<el-button @click="proxyPreEdit(scope.row.index,false)" size="mini" type="text">取消</el-button>
+									<el-button @click="proxyEdit(scope.row.index)" size="mini" type="text">保存</el-button>
+								</span>
+								<span v-else>
+									<el-button @click="proxyPreEdit(scope.row.index,true)" size="mini" type="text">编辑</el-button>
+									<el-button @click="proxyDelete(scope.row.index)" size="mini" type="text">删除</el-button>
+									<el-button @click="proxySwitch(scope.row.index)" size="mini" type="text">{{scope.row.enabled ? '停用' : '启用'}}</el-button>
 								</span>
 							</template>
 						</el-table-column>
@@ -109,7 +163,7 @@
 				</el-tab-pane>
 			</el-tabs>
 
-			<div style="max-height: 40px;">
+			<div>
 				{{count}} : {{json}}
 			</div>
 		</div>
@@ -120,36 +174,24 @@
 			el: "#header"
 		})
 		var REG_HOST = /^(\d{1,3}\.){3}\d{1,3}\s+[\w\.\-]{4,}$/
+		var REG_PROXY = /^(\d{1,3}\.){3}\d{1,3}(:\d{1,6})?$/
 		var app = new Vue({
 			el: "#app",
 			data: {
 				hostPath: "",
 				host: "",
-				isStart: false,
 				json: "123",
 				count: 0,
+				
+				hostList: [],
+				hostKeyword:'',
+				
+				proxyFrom:'',
+				proxyTo:'',
+				proxyKeyword:'',
 				proxyList: [{
-					
+					index:1,from:"123", to:"456",enabled:true
 				}],
-				hostList: [{
-					host: "127.0.0.1 aaa.com",
-					enabled: true
-				},{host: "127.0.0.1 aaa.com",enabled: true},
-				{host: "127.0.0.1 aaa.com",enabled: true},
-				{host: "127.0.0.1 aaa.com",enabled: true},
-				{host: "127.0.0.1 aaa.com",enabled: true},
-				{host: "127.0.0.1 aaa.com",enabled: true},
-				{host: "127.0.0.1 aaa.com",enabled: true},
-				{host: "127.0.0.1 aaa.com",enabled: true},
-				{host: "127.0.0.1 aaa.com",enabled: true},
-				{host: "127.0.0.1 aaa.com",enabled: true},
-				{host: "127.0.0.1 aaa.com",enabled: true},
-				{host: "127.0.0.1 aaa.com",enabled: true},
-				{host: "127.0.0.1 aaa.com",enabled: true},
-				{host: "127.0.0.1 aaa.com",enabled: true},
-				{host: "127.0.0.1 aaa.com",enabled: true}
-				],
-				hostKeyword:''
 			},
 			methods: {
 				click: function() {
@@ -166,32 +208,95 @@
 					console.log("xx")
 					return scope.row.enabled ? 'success-row' :'';
 				},
-				hostAdd() {
-					var host = this.host && this.host.trim();
+				// =============================== host  =====================
+				hostValidate(host){
 					if (host && REG_HOST.test(host)) {
 						aardioCall("hostAdd", host)
+						return true;
 						//onMsg("success","添加成功");
 						this.host = "";
 					} else {
 						onMsg("warn", "配置不合法，（ip  域名）")
+						return false;
+					}
+				},
+				hostAdd() {
+					var host = this.host && this.host.trim();
+					if(this.hostValidate(host)){
+						aardioCall("hostAdd", host)
+						this.host = "";
 					}
 				},
 				hostDelete(index) {
 					aardioCall("hostDelete",index);
 				},
+				
 				hostPreEdit(index,isEdit) {
-					this.hostList[index-1].edit = isEdit
+					console.log(index)
+					this.hostList[index-1].hostTmp = this.hostList[index-1].host
+					this.hostList[index-1].edit = isEdit;
+					this.count ++;
+				},
+				hostEdit(index){
+					var host = this.hostList[index-1].hostTmp.host.trim();
+					if(this.hostValidate(host)){
+						aardioCall("hostEdit",index,host)
+					}
+					
 				},
 				hostSwitch(index) {
 					aardioCall("hostSwitch",index);
 				},
+				// =============================== host  =====================
 
-
+				// =============================== proxy =====================
+				proxyValidate(pFrom, pTo){
+					if (!pFrom || !REG_PROXY.test(pFrom)) {
+						onMsg("warn", "From: "+pFrom+" 不合法，（ip:port）")
+						return false;
+					}
+					if (!pTo || !REG_PROXY.test(pTo)) {
+						onMsg("warn", "To: "+pTo+" 不合法，（ip:port）")
+						return false;
+					}
+					return true;
+				},
+				proxyAdd(){
+					var pFrom = this.proxyFrom && this.proxyFrom.trim();
+					var pTo = this.proxyTo && this.proxyTo.trim();
+					if(this.proxyValidate(pFrom, pTo)){
+						aardioCall("proxyAdd", host)
+						this.proxyFrom = "";
+						this.proxyTo = "";
+					}
+				
+				},
+				proxyDelete(index) {
+					aardioCall("proxyDelete",index);
+				},
+				
+				proxyPreEdit(index,isEdit) {
+					console.log(index)
+					this.proxyList[index-1].edit = isEdit;
+					this.count ++;
+				},
+				proxyEdit(index){
+					var pFrom = this.proxyList[index-1].fromTmp;
+					var pTo = this.proxyList[index-1].toTmp;
+					if(this.proxyValidate(pFrom, pTo)){
+						aardioCall("proxyEdit",index,pFrom , pTo)
+					}
+					
+				},
+				proxySwitch(index) {
+					aardioCall("proxySwitch",index);
+				},
+				// =============================== proxy =====================
 			}
 		})
 
-		var aardioCall = function(method, args) {
-			return external[method](args)
+		var aardioCall = function(method, ...args) {
+			return external[method](...args)
 		}
 
 		function onDataChange(rlt) {
@@ -200,16 +305,32 @@
 			app.count++;
 			app.hostPath = data.hostPath;
 			var hostList = []
-			alert(data.hostList.length)
 			for(var i=0,len=data.hostList.length; i<len;i++){
 				var item = data.hostList[i]
 				if(data.hostList[i]){
 					item.index=i+1;
+					item.hostTmp = item.host
 					hostList.push(item)
 				}
 				
 			}
 			app.hostList = hostList;
+			
+			var proxyList = [];
+			for(var i=0,len=data.proxyList.length; i<len;i++){
+				var item = data.proxyList[i]
+				if(data.proxyList[i]){
+					item.index=i+1
+					item.fromTmp = item.from
+					item.toTmp = item.to
+					proxyList.push(item)
+				}
+				
+			}
+			app.proxyList = proxyList;
+			
+			
+			
 			return;
 			switch (rlt.type) {
 				case 'config':

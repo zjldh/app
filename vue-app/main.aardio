@@ -22,28 +22,22 @@ function init(){
 	config = web.json.parse(string.load(configPath)) || {};
 	config.hostPath :="C:\Windows\System32\drivers\etc\hosts"; 
 	config.hostList :={{host="127.0.0.1 www.baidu.com"}}
+	
+	config.proxyList :[{from="127.0.0.1",to="127.0.0.1:8080"}]
 	sendConfig();
 }
 
 
-function saveConfig(){
- 	string.save(configPath, web.json.stringify(config));
-}
-function sendConfig(){
-    console.dump(config.hostList)
-	sendDataWithType("config",config);
-}
+
 
 /*HOSTS{{*/
 
 var changeHosts=function(host, enabled){
-    console.log(host, enabled)
     var hostTmp = string.replace(host,"\s",'');
     hostTmp = string.upper(hostTmp);
     var lines={}
     var exist=false;
 	for line in io.lines(config.hostPath) { 
-		console.log(line)
 		var tmp = string.upper(string.replace(line,"\s",''));
 		// 存在一条 启用的
 		if(hostTmp===tmp){
@@ -62,7 +56,6 @@ var changeHosts=function(host, enabled){
     	table.push(lines,line)
 	} 
 	if(enabled && !exist){
-		console.log("xx")
 		table.push(lines,host)
 	}
 	string.save(config.hostPath, string.join(lines,'\r\n'))
@@ -71,7 +64,8 @@ var changeHosts=function(host, enabled){
 var dealHostStatus=function(hostList){
     var map = {};
     for k,v in hostList{
-    	var tmp = string.upper(string.replace(v,"\s",''))
+        hostList[k].enabled = false;
+    	var tmp = string.upper(string.replace(v.host,"\s",''))
     	table.push(map,tmp)
     }
 	for line in io.lines(config.hostPath) { 
@@ -84,22 +78,32 @@ var dealHostStatus=function(hostList){
 			}
 		}
 	}
+	return hostList;
 }
 
 
 
 /*}}*/
 
+function saveConfig(){
+ 	string.save(configPath, web.json.stringify(config));
+}
+function sendConfig(){
+    //console.dump(config.hostList)
+    config.hostList = dealHostStatus(config.hostList);
+	sendDataWithType("config",config);
+	saveConfig()
+}
+
 wb.external = {};
 
 wb.external.getConfig=function(){
-    console.log("getConfig")
 	sendConfig();
 }
+// =======================================================   host
 wb.external.hostPathChange = function(){
   	var path = fsys.dlg.open("hosts文件|hosts|");
   	if(path){
-  		console.log(path)
   		config.hostPath = path;
   		saveConfig();
   	}
@@ -114,7 +118,6 @@ wb.external.hostAdd=function(host){
   	for k,v in config.hostList{
   		var tmp = string.upper(string.replace(v.host,"\s",''))
   		if(tmp == hostTmp){
-  			console.log("xx")
   			sendMsg("error",host+"已存在");
   			return;
   		};
@@ -124,36 +127,46 @@ wb.external.hostAdd=function(host){
 	sendConfig();
 }
 wb.external.hostDelete = function(index){
-    console.log("delete",index)
 	table.remove(config.hostList,index)
-	 console.log("len",#config.hostList)
-	console.dump(config.hostList)
 	sendMsg("success","删除成功");
 	sendConfig();
 };
 wb.external.hostSwitch = function(index){
-    console.log('hostSwitch')
 	var item = config.hostList[index]
 	var host =item.host;
 	item.enabled = !item.enabled;
 	changeHosts(item.host, item.enabled)
+	sendMsg("success",item.host +"  "+(item.enabled ?"启用成功":"停用成功"));
+	sendConfig();
 };
 wb.external.hostEdit = function(index, host){
 	config.hostList[index].host = host
 	sendConfig();
 };
 
+// =======================================================   host
+
+
+
+// =======================================================   proxy
+
+
+
+// =======================================================   proxy
+
+
+
+
 
 /*文件监视{{*/
 import fsys.dirWatcher;
 var watchDir="/html";
 var startWatch=function(){
-	winform.thrdWatcher = fsys.dirWatcher.thread(
-	function(filename,action,actionText){
-		//console.log(filename)
-		wb.go("/html/host.html");
+	//winform.thrdWatcher = fsys.dirWatcher.thread(
+	//function(filename,action,actionText){
+	//	wb.go("/html/host.html");
 		
-	}, watchDir); ;
+	//}, watchDir); ;
 }
 
 var stopWatch=function(){
@@ -171,7 +184,6 @@ wb.external.close = function(){winform.close();};
 
 function sendData(data){
     var json =web.json.stringify(data);
-   // console.log(json)
 	wb.doScript("onDataChange("+json+")")
 }
 function sendDataWithType(t,d){
