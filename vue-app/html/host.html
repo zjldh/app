@@ -60,7 +60,7 @@
 							</template>
 							<template slot-scope="scope">{{scope.$index+1}}</template>
 						</el-table-column>
-						<el-table-column prop="host" label="配置项" width="450">
+						<el-table-column prop="host" label="配置项" width="300">
 							<template slot="header" slot-scope="scope">
 								配置项 <el-button icon="el-icon-refresh" type="text" @click="getConfig"></el-button>
 							</template>
@@ -70,6 +70,16 @@
 								</span>
 								<span v-else>
 									{{scope.row.host}}
+								</span>
+							</template>
+						</el-table-column>
+						<el-table-column prop="remark" label="备注" width="150">
+							<template slot-scope="scope">
+								<span v-if="scope.row.edit" class="p-10">
+									<el-input size="mini" v-model="scope.row.remarkTmp"></el-input>
+								</span>
+								<span v-else>
+									{{scope.row.remark}}
 								</span>
 							</template>
 						</el-table-column>
@@ -140,6 +150,16 @@
 								</span>
 								<span v-else>
 									{{scope.row.to}}
+								</span>
+							</template>
+						</el-table-column>
+						<el-table-column prop="remark" label="备注" width="150">
+							<template slot-scope="scope">
+								<span v-if="scope.row.edit" class="p-10">
+									<el-input size="mini" v-model="scope.row.remarkTmp"></el-input>
+								</span>
+								<span v-else>
+									{{scope.row.remark}}
 								</span>
 							</template>
 						</el-table-column>
@@ -241,8 +261,9 @@
 				},
 				hostEdit(index){
 					var host = this.hostList[index-1].hostTmp.trim();
+					var remark = this.hostList[index-1].remarkTmp.trim();
 					if(this.hostValidate(host)){
-						aardioCall("hostEdit",index,host)
+						aardioCall("hostEdit",index,host, remark)
 					}
 					
 				},
@@ -283,10 +304,11 @@
 					this.count ++;
 				},
 				proxyEdit(index){
-					var pFrom = this.proxyList[index-1].fromTmp;
-					var pTo = this.proxyList[index-1].toTmp;
+					var pFrom = this.proxyList[index-1].fromTmp.trim();
+					var pTo = this.proxyList[index-1].toTmp.trim();
+					var remark = this.proxyList[index-1].remarkTmp.trim();
 					if(this.proxyValidate(pFrom, pTo)){
-						aardioCall("proxyEdit",index,pFrom , pTo)
+						aardioCall("proxyEdit",index,pFrom ,pTo, remark)
 					}
 					
 				},
@@ -312,6 +334,7 @@
 				if(data.hostList[i]){
 					item.index=i+1;
 					item.hostTmp = item.host
+					item.remarkTmp = item.remark
 					hostList.push(item)
 				}
 				
@@ -325,26 +348,12 @@
 					item.index=i+1
 					item.fromTmp = item.from
 					item.toTmp = item.to
+					item.remarkTmp = item.remark
 					proxyList.push(item)
 				}
 				
 			}
 			app.proxyList = proxyList;
-			
-			
-			
-			return;
-			switch (rlt.type) {
-				case 'config':
-					onMsg('success', rlt.data)
-					updateConfig(rlt.data);
-					//onMsg("warn",app.hostPath)
-				case 'table':
-					app.tableData = rlt.data;
-					break;
-				default:
-
-			}
 
 		}
 

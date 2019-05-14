@@ -142,12 +142,13 @@ wb.external.hostDelete = function(index){
 	sendConfig();
 };
 // 编辑
-wb.external.hostEdit = function(index, host){
+wb.external.hostEdit = function(index, host, remark){
      if(checkHostExist(index, host)){
     	return;
     }
     
 	config.hostList[index].host = host;
+	config.hostList[index].remark = remark;
 	sendMsg("success","编辑成功");
 	sendConfig();
 };
@@ -198,13 +199,14 @@ wb.external.proxyDelete = function(index){
 	sendConfig();
 };
 // 编辑
-wb.external.proxyEdit = function(index, from,to){
+wb.external.proxyEdit = function(index, from,to, remark){
     if(checkProxyExist(index, from,to)){
     	return;
     }
     
 	config.proxyList[index].from = from;
 	config.proxyList[index].to = to;
+	config.proxyList[index].remark = remark;
 	sendMsg("success","编辑成功");
 	sendConfig();
 };
