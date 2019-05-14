@@ -1,23 +1,23 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<project ver="10" name="vue-app" libEmbed="true" icon="..." CompanyName="单位名称" FileDescription="vue-app" LegalCopyright="Copyright (C) 单位名称 2019" ProductName="vue-app" InternalName="vue-app" FileVersion="0.0.0.03" ProductVersion="0.0.0.03" publishDir="/Publish/" ui="win" output="vue-app.exe" dstrip="false">
+<project ver="10" name="vue-app" libEmbed="true" icon="..." CompanyName="单位名称" FileDescription="vue-app" LegalCopyright="Copyright (C) 单位名称 2019" ProductName="vue-app" InternalName="vue-app" FileVersion="0.0.0.06" ProductVersion="0.0.0.06" publishDir="/Publish/" ui="win" output="vue-app.exe" dstrip="false">
 	<file name="main.aardio" path="main.aardio" comment="启动程序代码"/>
 	<folder name="资源文件" path="res" embed="true">
 		<file name="Host.aardio" path="res\Host.aardio" comment="res\Host.aardio"/>
+		<file name="价格.aardio" path="res\价格.aardio" comment="res\价格.aardio"/>
 		<file name="播放器.aardio" path="res\播放器.aardio" comment="res\播放器.aardio"/>
 		<file name="系统时间.aardio" path="res\系统时间.aardio" comment="res\系统时间.aardio"/>
 		<file name="网易.aardio" path="res\网易.aardio" comment="res\网易.aardio"/>
 		<file name="草稿.aardio" path="res\草稿.aardio" comment="res\草稿.aardio"/>
-		<folder name="host" path="res\host" comment="res\host" embed="false">
+		<folder name="host" path="res\host" comment="res\host">
 			<file name="host" path="res\host\host" comment="res\host\host"/>
 		</folder>
-		<file name="价格.aardio" path="res\价格.aardio" comment="res\价格.aardio"/>
 	</folder>
 	<folder name="HTML" path="html" comment="" embed="true">
-		<file name="main.aardio" path="html\main.aardio" comment="html\main.aardio"/>
 		<file name=".project" path="html\.project" comment="html\.project"/>
 		<file name="course.html" path="html\course.html" comment="html\course.html"/>
 		<file name="host.html" path="html\host.html" comment="html\host.html"/>
 		<file name="index.html" path="html\index.html" comment="html\index.html"/>
+		<file name="main.aardio" path="html\main.aardio" comment="html\main.aardio"/>
 		<folder name="css" path="html\css" comment="html\css">
 			<file name="element.css" path="html\css\element.css" comment="html\css\element.css"/>
 			<file name="element2.css" path="html\css\element2.css" comment="html\css\element2.css"/>
@@ -27,10 +27,10 @@
 				<file name="element-icons.woff" path="html\css\fonts\element-icons.woff" comment="html\css\fonts\element-icons.woff"/>
 			</folder>
 		</folder>
-		<folder name="img" path="html\img" comment="html\img"/>
 		<folder name="js" path="html\js" comment="html\js">
 			<file name="echart.js" path="html\js\echart.js" comment="html\js\echart.js"/>
 			<file name="echarts.js" path="html\js\echarts.js" comment="html\js\echarts.js"/>
+			<file name="element.css" path="html\js\element.css" comment="html\js\element.css"/>
 			<file name="element.js" path="html\js\element.js" comment="html\js\element.js"/>
 			<file name="element2.js" path="html\js\element2.js" comment="html\js\element2.js"/>
 			<file name="vue.js" path="html\js\vue.js" comment="html\js\vue.js"/>

@@ -14,9 +14,11 @@ import web.json;
 import web.script;
 
 
-
 var wb = web.blink.form(winform);
 wb.go("/html/host.html");
+
+
+winform.show();
 
 var configPath="/res/host/host";
 var config = {};
@@ -349,6 +351,7 @@ var stopWatch=function(){
 
 wb.external.hitCaption = function(){winform.hitCaption();};
 wb.external.close = function(){winform.close();};
+wb.external.min = function(){winform.hitmin();};
    
 
 function sendData(data){
@@ -376,11 +379,10 @@ startWatch();
 winform.onClose = function(hwnd,message,wParam,lParam){
    	saveConfig();
    	stopWatch();
+   	sendConfig();
 }
-
-wb.wait();
 init();
-winform.show();
+wb.wait();
 
 //win.setTopmost(winform.hwnd,true)
 win.loopMessage();

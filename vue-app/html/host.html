@@ -21,6 +21,7 @@
 				</el-col>
 				<el-col :span="2">
 					<div class="ctrl">
+						<a class="fs-18" onclick="external.min()">-</a>
 						<a class="el-icon-close" onclick="external.close()"></a>
 					</div>
 				</el-col>
@@ -29,7 +30,7 @@
 		</div>
 		<div id="app">
 		
-			<el-tabs value="second">
+			<el-tabs value="first">
 				<el-tab-pane label="Hosts" name="first">
 					<div class="info mb-20 fs-10"><i class="el-icon-tickets"></i> 配置hosts文件内容</div>
 					<el-input disabled class="mb-10" v-model="hostPath">
@@ -37,7 +38,7 @@
 							<div width="380px">Host文件：</div>
 						</template>
 						<template slot="append">
-							<el-button type="primary" onClick="aardioCall('hostPathChange')" icon="el-icon-edit"></el-button>
+							<el-button type="primary"  onClick="aardioCall('hostPathChange')" icon="el-icon-edit"></el-button>
 							<el-button type="primary" onClick="aardioCall('hostPathOpen')" icon="el-icon-folder-opened"></el-button>
 						</template>
 					</el-input>
