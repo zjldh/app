@@ -107,6 +107,12 @@
 				
 				<el-tab-pane label="Proxy" name="second">
 					<div class="info mb-20 fs-10"><i class="el-icon-tickets"></i> 配置监听端口</div>
+					
+					<div class="mb-20">
+						<el-button type="primary" onClick="aardioCall('proxyReset')" size="mini">重置所有配置</el-button>
+						<el-button type="primary" onClick="aardioCall('proxyShow')" size="mini">显示所有配置</el-button>
+					</div>
+					
 					<el-row :gutter="20">
 						<el-col :span="10">
 							<el-input class="mb-10" v-model="proxyFrom" placeholder="ip:port">
@@ -371,6 +377,7 @@
 
 		function onMsg(type, msg) {
 			app.$notify({
+				dangerouslyUseHTMLString: true,
 				title: msgTypeName[type],
 				message: msg,
 				type: type

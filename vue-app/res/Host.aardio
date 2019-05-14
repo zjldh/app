@@ -8,9 +8,11 @@ import console;
 import fsys.dlg;
 import inet.whttp;
 import process;
+import process.popen;
 import web.blink.form;
 import web.json;
 import web.script;
+
 
 
 var wb = web.blink.form(winform);
@@ -92,6 +94,7 @@ function saveConfig(){
 }
 function sendConfig(){
     config.hostList = dealHostStatus(config.hostList);
+    config.proxyList = dealProxyStatus(config.proxyList);
 	sendDataWithType("config",config);
 	saveConfig()
 }
@@ -103,6 +106,8 @@ wb.external.getConfig=function(){
 }
 
 // =======================================================   host
+/*Host{{*/
+
 wb.external.hostPathChange = function(){
   	var path = fsys.dlg.open("hosts文件|hosts|");
   	if(path){
@@ -163,12 +168,64 @@ wb.external.hostSwitch = function(index){
 };
 
 
+/*}}*/
+
 // =======================================================   host
 
 
 
 
 // =======================================================   proxy
+/*CMD{{*/
+
+cmdPrefix = "netsh interface portproxy ";
+cmdShow = cmdPrefix + "show all"
+cmdReset = cmdPrefix + "reset"
+cmdAdd = cmdPrefix + "add v4tov4 listenaddress=%s listenport=%s connectaddress=%s connectport=%s";
+cmdDelete = cmdPrefix + "delete v4tov4 listenaddress=%s listenport=%s";
+
+
+function cmdCall(cmd, func){
+	var prcs = process.popen(, cmd)
+	var rlt = prcs.peekTo('>')
+	console.log(rlt)
+	
+	if(func){
+		rlt = func(rlt)
+	
+	}
+	prcs.process.terminate();
+	prcs.close();
+	return rlt;
+}
+
+function getProxyList(){
+	return cmdCall(cmdShow, function(rlt){
+		
+		var list = string.split(rlt,'\n');
+		var proxyList = {};
+		var needRead = false;
+		for k,v in list{
+    		if(string.startWith(v, "---")){
+        		needRead = true;
+        		continue;
+    		}
+    		if(string.trim(v)!="" && needRead){
+        		v = string.replace(v,"\s+"," ")
+        		var t = string.split(v," ");
+        		
+        		console.log(t[1]+":"+t[2]+"   ->   "+t[3]+":"+t[4])
+        		table.push(proxyList,{from=t[1]+":"+t[2] ; to =t[3]+":"+t[4] });
+    		}
+    	}
+    	return proxyList;
+
+	})
+}
+
+/*}}*/
+
+
 function checkProxyExist(index, from ,to){
     var proxyTmp = string.replace(from+"---"+to,"\s",'');
     proxyTmp = string.upper(proxyTmp);
@@ -180,6 +237,25 @@ function checkProxyExist(index, from ,to){
   		};
   	}
   	return false;
+}
+
+function dealProxyStatus(proxyList){
+	var list = getProxyList();
+	var map = {};
+    for k,v in proxyList{
+        proxyList[k].enabled = false;
+    	var tmp = string.upper(string.replace(v.from+"--"+v.to,"\s",''))
+    	table.push(map,tmp)
+    }
+	for k,v in list { 
+		var tmp = string.upper(string.replace(v.from+"--"+v.to,"\s",''))
+		for i,v in proxyList{
+			if(tmp === map[i]){
+				proxyList[i].enabled = true;
+			}
+		}
+	}
+	return proxyList;
 }
 // 添加
 wb.external.proxyAdd=function(from ,to){
@@ -213,9 +289,39 @@ wb.external.proxyEdit = function(index, from,to, remark){
 // 起停用
 wb.external.proxySwitch = function(index){
 	var item = config.proxyList[index]
-	var host =item.host;
 	item.enabled = !item.enabled;
+	var list = string.split(item.from+":"+item.to,":");
+	var rlt ="";
+	if(item.enable){
+		rlt = cmdCall(string.format(cmdAdd,list[1],list[2],list[3],list[4] ))	
+	}else{
+		rlt = cmdCall(string.format(cmdDelete,list[1],list[2] ))	
+	}
+	if(string.indexOf(rlt,"管理员")){
+		console.log("xxx",rlt)
+		sendMsg("error","权限不足，请以管理员身份运行此程序")
+		return;
+	}
+	sendMsg("success",item.from+"->"+item.to +"  "+(item.enabled ?"启用成功":"停用成功"));
 	sendConfig();
+};
+
+wb.external.proxyReset = function(index){
+	cmdCall(cmdReset)
+	for k,v in config.proxyList{
+		v.enabled=false;
+	}
+	sendConfig();
+};
+
+wb.external.proxyShow = function(index){
+	proxyList = getProxyList();
+	var msg = "<b>当前配置:</b><div>"
+	for k,v in proxyList{
+		msg +=v.from+"  ->  "+v.to+"<br/>"
+	}
+	msg +="</div>";
+	sendMsg("success",msg);
 };
 
 
