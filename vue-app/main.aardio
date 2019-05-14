@@ -31,7 +31,7 @@ function init(){
 	
 	
 	config.proxyList :={{from="127.0.0.1";to="127.0.0.1:8080"}}
-	sendConfig();
+	
 }
 
 
@@ -383,6 +383,6 @@ winform.onClose = function(hwnd,message,wParam,lParam){
 }
 init();
 wb.wait();
-
+sendConfig();
 //win.setTopmost(winform.hwnd,true)
 win.loopMessage();

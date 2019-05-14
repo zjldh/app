@@ -291,9 +291,22 @@
 					}
 					return true;
 				},
+				proxyAutoFill(value){
+					value = value && value.trim();
+					if(value.startsWith(":")){
+						value = "127.0.0.1"+value
+					}else if(value.endsWith(":")){
+						value += "80"
+					}else if(/^\d+$/.test(value)){
+						value = "127.0.0.1:"+value
+					}else if(/^(\d{1,3}\.){3}\d{1,3}$/){
+						value = value+":80";
+					}
+					return value;
+				},
 				proxyAdd(){
-					var pFrom = this.proxyFrom && this.proxyFrom.trim();
-					var pTo = this.proxyTo && this.proxyTo.trim();
+					var pFrom = this.proxyAutoFill(this.proxyFrom);
+					var pTo = this.proxyAutoFill(this.proxyTo);
 					if(this.proxyValidate(pFrom, pTo)){
 						aardioCall("proxyAdd", pFrom, pTo)
 						this.proxyFrom = "";
@@ -311,9 +324,11 @@
 					this.count ++;
 				},
 				proxyEdit(index){
-					var pFrom = this.proxyList[index-1].fromTmp.trim();
-					var pTo = this.proxyList[index-1].toTmp.trim();
-					var remark = this.proxyList[index-1].remarkTmp.trim();
+					var o = this.proxyList[index-1];
+					var pFrom = this.proxyAutoFill(o.fromTmp);
+					var pTo = this.proxyAutoFill(o.toTmp);
+					
+					var remark = o.remarkTmp && o.remarkTmp.trim();
 					if(this.proxyValidate(pFrom, pTo)){
 						aardioCall("proxyEdit",index,pFrom ,pTo, remark)
 					}
