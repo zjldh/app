@@ -188,7 +188,6 @@ cmdDelete = cmdPrefix + "delete v4tov4 listenaddress=%s listenport=%s";
 function cmdCall(cmd, func){
 	var prcs = process.popen(, cmd)
 	var rlt = prcs.peekTo('>')
-	console.log(rlt)
 	
 	if(func){
 		rlt = func(rlt)
@@ -213,8 +212,6 @@ function getProxyList(){
     		if(string.trim(v)!="" && needRead){
         		v = string.replace(v,"\s+"," ")
         		var t = string.split(v," ");
-        		
-        		console.log(t[1]+":"+t[2]+"   ->   "+t[3]+":"+t[4])
         		table.push(proxyList,{from=t[1]+":"+t[2] ; to =t[3]+":"+t[4] });
     		}
     	}
@@ -259,7 +256,6 @@ function dealProxyStatus(proxyList){
 }
 // 添加
 wb.external.proxyAdd=function(from ,to){
-    console.log("add")
     if(checkProxyExist(-1, from,to)){
     	return;
     }
@@ -269,7 +265,6 @@ wb.external.proxyAdd=function(from ,to){
 }
 // 删除
 wb.external.proxyDelete = function(index){
-    console.log("delete",index)
 	table.remove(config.proxyList,index)
 	sendMsg("success","删除成功");
 	sendConfig();
@@ -292,13 +287,12 @@ wb.external.proxySwitch = function(index){
 	item.enabled = !item.enabled;
 	var list = string.split(item.from+":"+item.to,":");
 	var rlt ="";
-	if(item.enable){
+	if(item.enabled){
 		rlt = cmdCall(string.format(cmdAdd,list[1],list[2],list[3],list[4] ))	
 	}else{
 		rlt = cmdCall(string.format(cmdDelete,list[1],list[2] ))	
 	}
 	if(string.indexOf(rlt,"管理员")){
-		console.log("xxx",rlt)
 		sendMsg("error","权限不足，请以管理员身份运行此程序")
 		return;
 	}
@@ -317,9 +311,14 @@ wb.external.proxyReset = function(index){
 wb.external.proxyShow = function(index){
 	proxyList = getProxyList();
 	var msg = "<b>当前配置:</b><div>"
-	for k,v in proxyList{
-		msg +=v.from+"  ->  "+v.to+"<br/>"
+	if(#proxyList){
+		for k,v in proxyList{
+			msg +=v.from+"  ->  "+v.to+"<br/>"
+		}
+	}else{
+		msg +="无"
 	}
+	
 	msg +="</div>";
 	sendMsg("success",msg);
 };

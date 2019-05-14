@@ -8,9 +8,12 @@ import console;
 import fsys.dlg;
 import inet.whttp;
 import process;
+import process.popen;
 import web.blink.form;
 import web.json;
 import web.script;
+
+
 
 var wb = web.blink.form(winform);
 wb.go("/html/host.html");
@@ -23,10 +26,11 @@ function init(){
 	config.hostPath :="C:\Windows\System32\drivers\etc\hosts"; 
 	config.hostList :={{host="127.0.0.1 www.baidu.com"}}
 	
-	config.proxyList :[{from="127.0.0.1",to="127.0.0.1:8080"}]
+	
+	
+	config.proxyList :={{from="127.0.0.1";to="127.0.0.1:8080"}}
 	sendConfig();
 }
-
 
 
 
@@ -89,8 +93,8 @@ function saveConfig(){
  	string.save(configPath, web.json.stringify(config));
 }
 function sendConfig(){
-    //console.dump(config.hostList)
     config.hostList = dealHostStatus(config.hostList);
+    config.proxyList = dealProxyStatus(config.proxyList);
 	sendDataWithType("config",config);
 	saveConfig()
 }
@@ -100,7 +104,10 @@ wb.external = {};
 wb.external.getConfig=function(){
 	sendConfig();
 }
+
 // =======================================================   host
+/*Host{{*/
+
 wb.external.hostPathChange = function(){
   	var path = fsys.dlg.open("hosts文件|hosts|");
   	if(path){
@@ -111,62 +118,224 @@ wb.external.hostPathChange = function(){
 wb.external.hostPathOpen=function(){
     process.exploreSelect(config.hostPath)
 }
-// 添加
-wb.external.hostAdd=function(host){
+
+function checkHostExist(index, host){
     var hostTmp = string.replace(host,"\s",'');
     hostTmp = string.upper(hostTmp);
-  	for k,v in config.hostList{
+	for k,v in config.hostList{
   		var tmp = string.upper(string.replace(v.host,"\s",''))
-  		if(tmp == hostTmp){
+  		if(tmp == hostTmp && index!=k){
   			sendMsg("error",host+"已存在");
-  			return;
+  			return true;
   		};
   	}
+  	return false;
+}
+// 添加
+wb.external.hostAdd=function(host){
+    if(checkHostExist(-1, host)){
+    	return;
+    }
 	table.push(config.hostList,{host=host})
   	sendMsg("success",host+"添加成功");
 	sendConfig();
 }
+// 删除
 wb.external.hostDelete = function(index){
 	table.remove(config.hostList,index)
 	sendMsg("success","删除成功");
 	sendConfig();
 };
+// 编辑
+wb.external.hostEdit = function(index, host, remark){
+     if(checkHostExist(index, host)){
+    	return;
+    }
+    
+	config.hostList[index].host = host;
+	config.hostList[index].remark = remark;
+	sendMsg("success","编辑成功");
+	sendConfig();
+};
+// 起停用
 wb.external.hostSwitch = function(index){
-	var item = config.hostList[index]
+   var item = config.hostList[index]
 	var host =item.host;
 	item.enabled = !item.enabled;
 	changeHosts(item.host, item.enabled)
 	sendMsg("success",item.host +"  "+(item.enabled ?"启用成功":"停用成功"));
 	sendConfig();
 };
-wb.external.hostEdit = function(index, host){
-	config.hostList[index].host = host
-	sendConfig();
-};
+
+
+/*}}*/
 
 // =======================================================   host
 
 
 
-// =======================================================   proxy
-
-
 
 // =======================================================   proxy
+/*CMD{{*/
+
+cmdPrefix = "netsh interface portproxy ";
+cmdShow = cmdPrefix + "show all"
+cmdReset = cmdPrefix + "reset"
+cmdAdd = cmdPrefix + "add v4tov4 listenaddress=%s listenport=%s connectaddress=%s connectport=%s";
+cmdDelete = cmdPrefix + "delete v4tov4 listenaddress=%s listenport=%s";
+
+
+function cmdCall(cmd, func){
+	var prcs = process.popen(, cmd)
+	var rlt = prcs.peekTo('>')
+	
+	if(func){
+		rlt = func(rlt)
+	
+	}
+	prcs.process.terminate();
+	prcs.close();
+	return rlt;
+}
+
+function getProxyList(){
+	return cmdCall(cmdShow, function(rlt){
+		
+		var list = string.split(rlt,'\n');
+		var proxyList = {};
+		var needRead = false;
+		for k,v in list{
+    		if(string.startWith(v, "---")){
+        		needRead = true;
+        		continue;
+    		}
+    		if(string.trim(v)!="" && needRead){
+        		v = string.replace(v,"\s+"," ")
+        		var t = string.split(v," ");
+        		table.push(proxyList,{from=t[1]+":"+t[2] ; to =t[3]+":"+t[4] });
+    		}
+    	}
+    	return proxyList;
+
+	})
+}
+
+/*}}*/
+
+
+function checkProxyExist(index, from ,to){
+    var proxyTmp = string.replace(from+"---"+to,"\s",'');
+    proxyTmp = string.upper(proxyTmp);
+	for k,v in config.proxyList{
+  		var tmp = string.upper(string.replace(v.from+"---"+v.to,"\s",''))
+  		if(tmp == proxyTmp && index!=k){
+  			sendMsg("error",from+"-->"+to+"已存在");
+  			return true;
+  		};
+  	}
+  	return false;
+}
+
+function dealProxyStatus(proxyList){
+	var list = getProxyList();
+	var map = {};
+    for k,v in proxyList{
+        proxyList[k].enabled = false;
+    	var tmp = string.upper(string.replace(v.from+"--"+v.to,"\s",''))
+    	table.push(map,tmp)
+    }
+	for k,v in list { 
+		var tmp = string.upper(string.replace(v.from+"--"+v.to,"\s",''))
+		for i,v in proxyList{
+			if(tmp === map[i]){
+				proxyList[i].enabled = true;
+			}
+		}
+	}
+	return proxyList;
+}
+// 添加
+wb.external.proxyAdd=function(from ,to){
+    if(checkProxyExist(-1, from,to)){
+    	return;
+    }
+	table.push(config.proxyList,{from=from; to=to})
+  	sendMsg("success",from+"->"+to+"添加成功");
+	sendConfig();
+}
+// 删除
+wb.external.proxyDelete = function(index){
+	table.remove(config.proxyList,index)
+	sendMsg("success","删除成功");
+	sendConfig();
+};
+// 编辑
+wb.external.proxyEdit = function(index, from,to, remark){
+    if(checkProxyExist(index, from,to)){
+    	return;
+    }
+    
+	config.proxyList[index].from = from;
+	config.proxyList[index].to = to;
+	config.proxyList[index].remark = remark;
+	sendMsg("success","编辑成功");
+	sendConfig();
+};
+// 起停用
+wb.external.proxySwitch = function(index){
+	var item = config.proxyList[index]
+	item.enabled = !item.enabled;
+	var list = string.split(item.from+":"+item.to,":");
+	var rlt ="";
+	if(item.enabled){
+		rlt = cmdCall(string.format(cmdAdd,list[1],list[2],list[3],list[4] ))	
+	}else{
+		rlt = cmdCall(string.format(cmdDelete,list[1],list[2] ))	
+	}
+	if(string.indexOf(rlt,"管理员")){
+		sendMsg("error","权限不足，请以管理员身份运行此程序")
+		return;
+	}
+	sendMsg("success",item.from+"->"+item.to +"  "+(item.enabled ?"启用成功":"停用成功"));
+	sendConfig();
+};
+
+wb.external.proxyReset = function(index){
+	cmdCall(cmdReset)
+	for k,v in config.proxyList{
+		v.enabled=false;
+	}
+	sendConfig();
+};
+
+wb.external.proxyShow = function(index){
+	proxyList = getProxyList();
+	var msg = "<b>当前配置:</b><div>"
+	if(#proxyList){
+		for k,v in proxyList{
+			msg +=v.from+"  ->  "+v.to+"<br/>"
+		}
+	}else{
+		msg +="无"
+	}
+	
+	msg +="</div>";
+	sendMsg("success",msg);
+};
 
 
 
-
+// =======================================================   proxy
 
 /*文件监视{{*/
 import fsys.dirWatcher;
 var watchDir="/html";
 var startWatch=function(){
-	//winform.thrdWatcher = fsys.dirWatcher.thread(
-	//function(filename,action,actionText){
-	//	wb.go("/html/host.html");
+	winform.thrdWatcher = fsys.dirWatcher.thread(
+	function(filename,action,actionText){
+		wb.go("/html/host.html");
 		
-	//}, watchDir); ;
+	}, watchDir); ;
 }
 
 var stopWatch=function(){
@@ -193,7 +362,6 @@ function sendDataWithType(t,d){
     sendData(data);
 }
 function sendMsg(typex, msg){
-    //console.log(msg)
 	wb.doScript(string.format("onMsg('%s','%s')", typex, msg))
 }
 //添加阴影
