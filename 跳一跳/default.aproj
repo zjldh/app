@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<project ver="10" name="跳一跳" libEmbed="true" icon="..." ui="win" output="跳一跳.exe" CompanyName="单位名称" FileDescription="跳一跳" LegalCopyright="Copyright (C) 单位名称 2018" ProductName="跳一跳" InternalName="跳一跳" FileVersion="0.0.0.03" ProductVersion="0.0.0.03" publishDir="/Publish/" dstrip="false">
+	<file name="main.aardio" path="main.aardio" comment="main.aardio"/>
+	<folder name="资源文件" path="res" embed="true">
+		<folder name="ADB" path="res\ADB" comment="res\ADB">
+			<file name="adb.exe" path="res\ADB\adb.exe" comment="res\ADB\adb.exe"/>
+		</folder>
+		<folder name="imgs" path="res\imgs" comment="res\imgs">
+			<file name="test.png" path="res\imgs\test.png" comment="res\imgs\test.png"/>
+		</folder>
+		<file name="领喵币.aardio" path="res\领喵币.aardio" comment="res\领喵币.aardio"/>
+	</folder>
+</project>
